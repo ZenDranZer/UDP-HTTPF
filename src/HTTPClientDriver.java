@@ -2,7 +2,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 
-public class HTTPServerDriver {
+public class HTTPClientDriver {
     public static void main(String[] args) {
        try {
            System.out.println("Please select one option from below:\n" +
@@ -15,10 +15,16 @@ public class HTTPServerDriver {
                    System.out.print(">>");
                    String userInput = br.readLine();
                HTTPC client = new HTTPC(userInput);
-                   //client.parseUserInput();
+               client.parseInput();
            }
            else if (choice.startsWith("2")){
-
+               System.out.print(">>");
+               String userInput = br.readLine();
+               System.out.println("Number of threads ?");
+               int n = Integer.parseInt(br.readLine());
+               for (int i =0;i<n;i++){
+                   HTTPFSClient client = new HTTPFSClient(userInput);
+               }
            }
            else
                System.out.println("Wrong INPUT, Please start the program again.");
