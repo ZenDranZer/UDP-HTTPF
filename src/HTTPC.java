@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -15,15 +14,17 @@ import java.util.Set;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 
-public class HTTPC{
+class HTTPC{
 
     //Data
     private String command;
     private int sequenceNumber = 1;
     private static String payload;
     private boolean headerOption=false,inlineDataOption=false,sendfileOption=false;
-    private String requestCommand,url="",inlineData="",fileToRead="";
-    private ArrayList<String> headerslist = new ArrayList<>();
+    private String url="";
+    private String inlineData="";
+    private String fileToRead="";
+    private ArrayList<String> headers = new ArrayList<>();
 
     //Packet Types
     private static final String ACK = "ACK";
@@ -33,14 +34,8 @@ public class HTTPC{
     private static HashMap<Integer, String> packetList;
     private StringBuilder writerBuilder;
 
-    //Networking
-    private URI uri;
     private String host;
     private String path;
-    private String query;
-    private String protocol;
-    private Socket socket;
-    private int port;
     private InetSocketAddress serverAddr;
     private static SocketAddress routerAddr = new InetSocketAddress("localhost", 3000);
     private static DatagramChannel channel;
@@ -93,12 +88,13 @@ public class HTTPC{
 
     private void getUrlData(String url2) {
         try{
-            uri = new URI(url2);
+            //Networking
+            URI uri = new URI(url2);
             host = uri.getHost();
             path = uri.getRawPath();
-            query = uri.getRawQuery();
-            protocol = uri.getScheme();
-            port = uri.getPort();
+            String query = uri.getRawQuery();
+            String protocol = uri.getScheme();
+            int port = uri.getPort();
 
             if (path == null) {
                 path = "";
@@ -158,12 +154,12 @@ public class HTTPC{
         String[] input = command.split(" ");
         if(input.length > 1){
             if(input[0].equals("httpc")){
-                requestCommand = input[1];
+                String requestCommand = input[1];
                 if(requestCommand.toLowerCase().equals("get") || requestCommand.toLowerCase().equals("post")){
                     for(int i = 0; i< input.length ; i++) {
                         if(input[i].equals("-h")) {
                             headerOption = true;
-                            headerslist.add(input[++i]);
+                            headers.add(input[++i]);
                         }
                         if(input[i].equals("-d") || input[i].equals("--d")) {
                             inlineDataOption = true;
@@ -236,8 +232,8 @@ public class HTTPC{
             }else { writerBuilder.append("GET " + path + " HTTP/1.1\n"); }
 
             writerBuilder.append("Host:" + host+"\n");
-            if (!headerslist.isEmpty()) {
-                for (String s : headerslist) {
+            if (!headers.isEmpty()) {
+                for (String s : headers) {
                     if (headerOption) {
                         String[] headerKeyValue = s.split(":");
                         writerBuilder.append(headerKeyValue[0] + ":" + headerKeyValue[1] + "\n");
@@ -259,8 +255,8 @@ public class HTTPC{
             writerBuilder.append("Host:" + host + "\r\n");
 
             if(headerOption) {
-                if (!headerslist.isEmpty()) {
-                    for (String s : headerslist) {
+                if (!headers.isEmpty()) {
+                    for (String s : headers) {
                         String[] headerKeyValue = s.split(":");
                         writerBuilder.append(headerKeyValue[0] + ":" + headerKeyValue[1] + "\r\n");
                     }

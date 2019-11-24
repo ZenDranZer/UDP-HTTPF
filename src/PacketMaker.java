@@ -3,12 +3,12 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class PacketMaker {
+class PacketMaker {
 
-    public static final int MIN_PACKET_LENGTH = 11;
-    public static final int MAX_PACKET_LENGTH = 11 + 1013;
-    public static final int DATA_TYPE = 0;
-    public static final int CONNECTION_TYPE = 1;
+    private static final int MIN_PACKET_LENGTH = 11;
+    static final int MAX_PACKET_LENGTH = 11 + 1013;
+    static final int DATA_TYPE = 0;
+    static final int CONNECTION_TYPE = 1;
 
     private final int packetType;
     private final int sequenceNumber;
@@ -16,7 +16,7 @@ public class PacketMaker {
     private final int peerPort;
     private final byte[] payload;
 
-    public PacketMaker(int type, int sequenceNumber, InetAddress peerAddress, int peerPort, byte[] payload) {
+    private PacketMaker(int type, int sequenceNumber, InetAddress peerAddress, int peerPort, byte[] payload) {
         this.packetType = type;
         this.sequenceNumber = sequenceNumber;
         this.peerAddress = peerAddress;
@@ -24,25 +24,11 @@ public class PacketMaker {
         this.payload = payload;
     }
 
-    public Packet toBuilder(){
+    Packet toBuilder(){
         return new Packet().setPacketType(packetType).setSequenceNumber(sequenceNumber).setPeerAddress(peerAddress).setPortNumber(peerPort).setPayload(payload);
     }
 
-    public byte[] toBytes() {
-        ByteBuffer buf = toBuffer();
-        byte[] raw = new byte[buf.remaining()];
-        buf.get(raw);
-        return raw;
-    }
-
-    public static PacketMaker fromBytes(byte[] bytes) throws Exception {
-        ByteBuffer buf = ByteBuffer.allocate(MAX_PACKET_LENGTH).order(ByteOrder.BIG_ENDIAN);
-        buf.put(bytes);
-        buf.flip();
-        return fromBuffer(buf);
-    }
-
-    public ByteBuffer toBuffer() {
+    ByteBuffer toBuffer() {
         ByteBuffer buf = ByteBuffer.allocate(MAX_PACKET_LENGTH).order(ByteOrder.BIG_ENDIAN);
         write(buf);
         buf.flip();
@@ -57,7 +43,7 @@ public class PacketMaker {
         buf.put(payload);
     }
 
-    public static PacketMaker fromBuffer(ByteBuffer buf) throws Exception {
+    static PacketMaker fromBuffer(ByteBuffer buf) throws Exception {
         if (buf.limit() < MIN_PACKET_LENGTH || buf.limit() > MAX_PACKET_LENGTH) {
             System.out.println(buf.limit());
             throw new Exception("Invalid length");
@@ -79,27 +65,23 @@ public class PacketMaker {
         return packet.create();
     }
 
-    public int getPacketType() {
+    int getPacketType() {
         return packetType;
     }
 
-    public int getSequenceNumber() {
+    int getSequenceNumber() {
         return sequenceNumber;
     }
 
-    public InetAddress getPeerAddress() {
-        return peerAddress;
-    }
-
-    public int getPeerPort() {
+    int getPeerPort() {
         return peerPort;
     }
 
-    public byte[] getPayload() {
+    byte[] getPayload() {
         return payload;
     }
 
-    public static class Packet{
+    static class Packet{
 
         private int packetType;
         private int sequenceNumber;
@@ -107,31 +89,31 @@ public class PacketMaker {
         private int portNumber;
         private byte[] payload;
 
-        public PacketMaker create() {
+        PacketMaker create() {
             return new PacketMaker(packetType, sequenceNumber, peerAddress, portNumber, payload);
         }
 
-        public Packet setPacketType(int packetType) {
+        Packet setPacketType(int packetType) {
             this.packetType = packetType;
             return this;
         }
 
-        public Packet setSequenceNumber(int sequenceNumber) {
+        Packet setSequenceNumber(int sequenceNumber) {
             this.sequenceNumber = sequenceNumber;
             return this;
         }
 
-        public Packet setPeerAddress(InetAddress peerAddress) {
+        Packet setPeerAddress(InetAddress peerAddress) {
             this.peerAddress = peerAddress;
             return this;
         }
 
-        public Packet setPortNumber(int portNumber) {
+        Packet setPortNumber(int portNumber) {
             this.portNumber = portNumber;
             return this;
         }
 
-        public Packet setPayload(byte[] payload) {
+        Packet setPayload(byte[] payload) {
             this.payload = payload;
             return this;
         }

@@ -24,6 +24,7 @@ public class HTTPClientDriver {
                int n = Integer.parseInt(br.readLine());
                for (int i =0;i<n;i++){
                    HTTPFSClient client = new HTTPFSClient(userInput);
+                   client.initialHandshake();
                }
            }
            else

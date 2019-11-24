@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 
-public class HTTPFSClient {
+class HTTPFSClient {
 
     //data
     private String input;
@@ -22,31 +22,29 @@ public class HTTPFSClient {
     private boolean isContent = false;
     private String content = "";
     private int sequenceNumber = 1;
-    private static String payload ="";
     private static final String ACK = "ACK";
     private String query;
-    private StringBuilder clientRequest;
 
     //Networking
     private static HashMap<Integer,String> packetList;
-    static DatagramChannel channel;
+    private static DatagramChannel channel;
     private InetSocketAddress serverAddr;
-    static PacketMaker p;
-    static SocketAddress routerAddr = new InetSocketAddress("localhost", 3000);
+    private static PacketMaker p;
+    private static SocketAddress routerAddr = new InetSocketAddress("localhost", 3000);
 
     HTTPFSClient(String input) {
+        try {
         this.input = input;
         headers = new ArrayList<>();
+        channel = DatagramChannel.open();
         packetList = new HashMap<>();
         parseInput();
-        try {
-            initialHandshake();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void receive(DatagramChannel channel){
+    private static void receive(DatagramChannel channel){
         try{
             channel.configureBlocking(false);
             Selector selector = Selector.open();
@@ -69,7 +67,7 @@ public class HTTPFSClient {
                 PacketMaker resp = PacketMaker.fromBuffer(buf);
                 System.out.println("Packet: "+ resp);
                 System.out.println("Router: "+ router);
-                payload = new String(resp.getPayload(), StandardCharsets.UTF_8);
+                String payload = new String(resp.getPayload(), StandardCharsets.UTF_8);
                 System.out.println("Payload: "+ payload);
                 setPacketACK(resp.getSequenceNumber());
                 keys.clear();
@@ -79,7 +77,7 @@ public class HTTPFSClient {
 
     private void sendRequest() {
         try{
-            clientRequest = new StringBuilder();
+            StringBuilder clientRequest = new StringBuilder();
             clientRequest.append(query+"\n");
             if(isHeader) {
                 for(int i = 0 ; i<headers.size();i++) {
@@ -99,7 +97,7 @@ public class HTTPFSClient {
                     .create();
             channel.send(p.toBuffer(), routerAddr);
             packetList.put(sequenceNumber, "");
-            System.out.println("Sending "+clientRequest+" to router at { "+routerAddr+" }");
+            System.out.println("Sending "+ clientRequest +" to router at { "+routerAddr+" }");
             receive(channel);
             //last packet from client to close the connection
             if(getPacketInfo(sequenceNumber).equals(ACK)) {
@@ -120,7 +118,7 @@ public class HTTPFSClient {
 
     }
 
-    private void initialHandshake() throws Exception {
+    void initialHandshake() throws Exception {
         p = new PacketMaker.Packet()
                 .setPacketType(PacketMaker.CONNECTION_TYPE)
                 .setSequenceNumber(sequenceNumber)
@@ -182,7 +180,7 @@ public class HTTPFSClient {
         return packetList.get(packetNumber);
     }
 
-    public static void setPacketACK(long sequenceNumber) {
+    private static void setPacketACK(long sequenceNumber) {
         packetList.put((int) sequenceNumber, ACK);
     }
 
